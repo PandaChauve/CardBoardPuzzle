@@ -1,4 +1,6 @@
-declare class All {
-    constructor();
+declare namespace PandaCardBoard {
+    class All {
+        constructor();
+    }
 }
-declare var greeter: All;
+declare var greeter: PandaCardBoard.All;

@@ -1,5 +1,14 @@
+namespace  PandaCardBoard{
 
-class All {
+enum State{
+    Start,
+    None,
+    Moving,
+    Locking
+}
+
+
+export class All {
     constructor() {
         var camera, scene, renderer;
         var effect, controls;
@@ -22,9 +31,7 @@ class All {
         resize();
         group.position.x = 600;
         group.rotation.z = Math.PI / 2;
-        var state = 'start';
-//var state = 'none';
-// 'locking', 'moving', 'none'
+        let state  = State.Start;
         animate();
 
         function init() {
@@ -79,7 +86,7 @@ class All {
             scene.add(light);
             var geometry = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE, 10, 10, 10);
 
-            function AddCube(x, y, z) {
+            function AddCube(x : number, y : number, z : number) {
                 var mesh = new THREE.Mesh(geometry, materials.block);
                 mesh.position.x = x * CUBE_SIZE;
                 mesh.position.y = z * CUBE_SIZE;
@@ -110,22 +117,21 @@ class All {
             effect.setSize(width, height);
         }
 
-        function update(dt) {
+        function update(dt : number) {
             resize();
             camera.updateProjectionMatrix();
             controls.update(dt);
         }
 
-        var currentLocking = null;
+        var currentLocking = <Locker>null;
         var currentMover = null;
 
-        function SetStateTo(newState) {
+        function SetStateTo(newState : State) {
             console.log("new state " + newState);
             state = newState;
         }
 
         function getFrontObject() {
-            raycaster.setFromCamera(mouse, camera);
             var intersects = raycaster.intersectObjects(group.children);
             var sect = null;
             var dist = 100000;
@@ -138,32 +144,7 @@ class All {
             return sect;
         }
 
-        function createLocker(obj, duration : number = -1) {
-            if (duration == -1)
-                duration = 1500;
-            obj.material = materials.target;
-            var ret = {
-                object: obj,
-                duration: duration,
-                startTime: Date.now(),
-                updateState : null,
-                reset : null
-            };
-            ret.updateState = function upateState() {
-                var ratio = (Date.now() - this.startTime) / this.duration;
-                if (ratio > 1)
-                    ratio = 1;
-                this.object.material.color.b = 1 - ratio;
-                return ratio == 1;
-            };
-            ret.reset = function reset() {
-                this.object.material = materials.block;
-                (<THREE.MeshBasicMaterial>materials.target).color.b = 1;
-            };
-            return ret;
-        }
-
-        function CreateMover(start, dest) {
+        function CreateMover(start : THREE.Vector3, dest : THREE.Mesh) {
             var ret = {
                     startPos: start.clone(),
                     endPos : dest.position.clone().multiplyScalar(-1),
@@ -189,11 +170,9 @@ class All {
                 group.position.multiplyScalar(1 - ratio);
                 group.position.addScaledVector(this.endPos, ratio);
                 return ratio == 1;
-            }
+            };
             return ret;
         }
-        var arrow;
-
 
         var currentHover = null;
         function hideAccessibles(){
@@ -203,7 +182,7 @@ class All {
             }
         }
 
-        function colorAccessibles(currentHover){
+        function colorAccessibles(currentHover : THREE.Mesh){
             for(var i = 0; i < group.children.length; ++i){
                 var tmp = group.children[i].position.distanceTo(currentHover.position) ;
                 if(group.children[i] != currentHover && tmp < GRAB_FACTOR * CUBE_SIZE*1.1)
@@ -211,56 +190,59 @@ class All {
             }
         }
 
-        function render(dt) {
-            if (state == 'start') {
-                var sect = getFrontObject();
-                if (sect && !currentLocking)
-                {
-                    currentLocking = createLocker(sect.object, 3000);
-                    currentHover = sect.object;
-                    colorAccessibles(currentHover);
-                }
-                else if (!sect && currentLocking) {
-                    currentLocking.reset();
-                    currentLocking = null;
-                    hideAccessibles();
-                    currentHover = null;
-                } else if (currentLocking) {
-                    if (currentLocking.updateState()) {
-                        currentLocking.reset();
-                        currentMover = CreateMover(group.position, currentLocking.object);
-                        currentLocking = null;
-                        group.position.x = 0;
-                        group.rotation.z = 0;
-                        hideAccessibles();
-                        currentHover = null;
-                        SetStateTo('moving');
+        function render() {
+            raycaster.setFromCamera(mouse, camera);
+            if (state == State.Start) {
+                if(!currentLocking) {
+                    var sect = getFrontObject();
+                    if (sect)
+                    {
+                        currentLocking = new Locker(sect.object, raycaster, 3000);
+                        currentHover = sect.object;
+                        colorAccessibles(currentHover);
                     }
                 }
-            } else if (state == 'none') {
-                var sect = getFrontObject();
+                else{
+                    var ret = currentLocking.updateState();
+                    switch(ret){
+                        case LockerState.Failed:
+                            currentLocking.destroy();
+                            currentLocking = null;
+                            break;
+                        case LockerState.Success:
+                            let mesh = currentLocking.destroy();
+                            currentLocking = null;
+                            currentMover = CreateMover(group.position, mesh);
+                            group.position.x = 0;
+                            group.rotation.z = 0;
+                            hideAccessibles();
+                            currentHover = null;
+                            SetStateTo(State.Moving);
+                    }
+                }
+            } else if (state == State.None) {
+                let sect = getFrontObject();
                 if (sect != null && sect.distance < GRAB_FACTOR * CUBE_SIZE) {
-                    SetStateTo('locking');
-                    currentLocking = createLocker(sect.object);
+                    SetStateTo(State.Locking);
+                    currentLocking = new Locker(sect.object, raycaster, 1500, GRAB_FACTOR * CUBE_SIZE);
                 }
-            } else if (state == 'locking') {
-                var sect = getFrontObject();
-                if (sect == null || sect.object != currentLocking.object || sect.distance >= GRAB_FACTOR * CUBE_SIZE) {
-                    currentLocking.reset();
+            } else if (state == State.Locking) {
+                let lockingState = currentLocking.updateState();
+                if (lockingState == LockerState.Failed) {
+                    currentLocking.destroy();
                     currentLocking = null;
-                    SetStateTo('none');
-                } else {
-                    if (currentLocking.upateState()) {
-                        SetStateTo('moving');
-                        currentLocking.reset();
-                        currentLocking = null;
-                        currentMover = CreateMover(group.position, sect.object);
-                    }
+                    SetStateTo(State.None);
+                } else if (lockingState == LockerState.Success) {
+                    let mesh = currentLocking.destroy();
+                    currentLocking = null;
+                    SetStateTo(State.Moving);
+                    currentMover = CreateMover(group.position, mesh);
                 }
-            } else if (state == 'moving') {
-                if (currentMover.upateState()) {
+
+            } else if (state == State.Moving) {
+                if (currentMover.updateState()) {
                     currentMover = null;
-                    SetStateTo('none');
+                    SetStateTo(State.None);
                 }
             }
             effect.render(scene, camera);
@@ -269,7 +251,7 @@ class All {
         function animate() {
             requestAnimationFrame(animate);
             update(clock.getDelta());
-            render(clock.getDelta());
+            render();
         }
 
         function fullscreen() {
@@ -285,7 +267,7 @@ class All {
         }
 
     }
+}
 
-};
-
-var greeter = new All();
+}
+var greeter = new PandaCardBoard.All();
