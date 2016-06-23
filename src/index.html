@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Cardboard Example</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            margin: 0px;
+            overflow: hidden;
+        }
+        #example {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="example"></div>
+<!-- debug div -->
+<div style="
+    height: 5px;
+    width: 5px;
+    background: red;
+    position: fixed;
+    top: 50%;
+    left: 23%;
+    margin-top: -2.5px;
+    margin-left: -2.5px;
+"></div>
+<script src="_externals/threejs/three.js"></script>
+<script src="_externals/threejs/DeviceOrientationControls.js"></script>
+<script src="_externals/threejs/OrbitControls.js"></script>
+<script src="_externals/threejs/StereoEffect.js"></script>
+<!-- inject:js -->
+<script src="../dist/js/bootstrap.js"></script>
+<!-- endinject -->
+</body>
+</html>

@@ -1,6 +1,4 @@
-declare class Greeter {
-    greeting: string;
-    constructor(greeting: string);
-    greet(): string;
+declare class All {
+    constructor();
 }
-declare var greeter: Greeter;
+declare var greeter: All;

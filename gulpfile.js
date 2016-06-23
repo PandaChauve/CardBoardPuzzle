@@ -1,15 +1,17 @@
 var gulp = require('gulp');
 var ts = require('gulp-typescript');
 var merge = require('merge2');
+var inject = require('gulp-inject');
+var runSequence = require('run-sequence');
 
 var tsProject = ts.createProject({
     "module": "commonjs",
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "removeComments": true,
     "preserveConstEnums": true,
     "target": "es5",
     "sourceMap": true ,
-    declaration: true
+    "declaration": true
 });
 
 
@@ -23,6 +25,22 @@ gulp.task('scripts', function() {
     ]);
 });
 
+gulp.task('index', function () {
+    var target = gulp.src('./src/index.html');
+    // It's not necessary to read the files (will speed up things), we're only after their paths:
+    var sources = gulp.src([
+        //'./src/_externals/**/*.js',
+        './dist/js/*.js'
+    ], {read: false});
+
+    return target.pipe(inject(sources, {relative: true}))
+        .pipe(gulp.dest('./src'));
+});
+
+gulp.task('build', function(cb){
+    runSequence(['scripts', 'index'], cb);
+});
+
 gulp.task('watch', ['scripts'], function() {
-    gulp.watch('src/**/*.ts', ['scripts']);
+    gulp.watch('src/**/*.ts', ['build']);
 });

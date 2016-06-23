@@ -2,18 +2,21 @@
   "name": "cardboard-puzzle",
   "version": "0.0.1",
   "dependencies": {
+  },
+  "devDependencies": {
     "gulp": "latest",
     "gulp-autoprefixer": "latest",
     "gulp-cssbeautify": "latest",
     "gulp-csscomb": "latest",
     "gulp-csso": "latest",
+    "gulp-inject": "latest",
     "gulp-less": "latest",
     "gulp-load-plugins": "latest",
     "gulp-rename": "latest",
     "gulp-typescript": "latest",
-    "merge2": "^1.0.2"
+    "merge2": "^1.0.2",
+    "run-sequence": "^1.2.1"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/PandaChauve/CardBoardPuzzle.git"
