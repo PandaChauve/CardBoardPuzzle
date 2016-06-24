@@ -67,7 +67,7 @@ export class UrlParser{
             state = newState;
         }
 
-        function getFrontObject() {
+        function getFrontObject() : THREE.Intersection {
             var intersects = container1.getRayCaster().intersectObjects(group.children);
             var sect = null;
             var dist = 100000;
@@ -81,15 +81,16 @@ export class UrlParser{
         }
 
         function CreateMover(dest : Element) {
-            var ret = new MoveTo(dest, group);
-            return ret;
+            SetStateTo(State.Moving);
+            return new MoveTo(dest, group);
         }
 
         var currentHover = null;
+
         function render() {
             if (state == State.Start) {
                 if(!currentLocking) {
-                    var sect = getFrontObject();
+                    let sect = getFrontObject();
                     if (sect)
                     {
                         currentLocking = new Locker(sect.object.userData, container1.getRayCaster(), 3000);
@@ -97,20 +98,16 @@ export class UrlParser{
                     }
                 }
                 else{
-                    var ret = currentLocking.update();
-                    switch(ret){
-                        case AnimationState.Failed:
-                            currentLocking.destroy();
-                            currentLocking = null;
-                            break;
-                        case AnimationState.Success:
-                            let mesh = currentLocking.destroy();
-                            currentLocking = null;
-                            currentMover = CreateMover(mesh);
+                    let ret = currentLocking.update();
+                    if(ret != AnimationState.InProgress){
+                        let mesh = currentLocking.destroy();
+                        currentLocking = null;
+                        if(ret == AnimationState.Success){
                             group.position.x = 0;
                             group.rotation.z = 0;
                             currentHover = null;
-                            SetStateTo(State.Moving);
+                            currentMover = CreateMover(mesh);
+                        }
                     }
                 }
             } else if (state == State.None) {
@@ -128,7 +125,6 @@ export class UrlParser{
                 } else if (lockingState == AnimationState.Success) {
                     let mesh = currentLocking.destroy();
                     currentLocking = null;
-                    SetStateTo(State.Moving);
                     currentMover = CreateMover(mesh);
                 }
 
@@ -137,10 +133,8 @@ export class UrlParser{
                 if(moveState == AnimationState.Success){
                     let mesh = currentMover.destroy();
                     currentMover = null;
-                    var idx = group.children.indexOf(mesh.mesh);
+                    let idx = group.children.indexOf(mesh.mesh);
                     group.children.splice(idx, 1);
-                    mesh.mesh.userData = null;
-                    mesh.mesh = null;
                     SetStateTo(State.None);
                 }
             }

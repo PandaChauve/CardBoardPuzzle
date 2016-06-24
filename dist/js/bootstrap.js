@@ -72,8 +72,8 @@ var PandaCardBoard;
                 return sect;
             }
             function CreateMover(dest) {
-                var ret = new PandaCardBoard.MoveTo(dest, group);
-                return ret;
+                SetStateTo(State.Moving);
+                return new PandaCardBoard.MoveTo(dest, group);
             }
             var currentHover = null;
             function render() {
@@ -87,27 +87,23 @@ var PandaCardBoard;
                     }
                     else {
                         var ret = currentLocking.update();
-                        switch (ret) {
-                            case PandaCardBoard.AnimationState.Failed:
-                                currentLocking.destroy();
-                                currentLocking = null;
-                                break;
-                            case PandaCardBoard.AnimationState.Success:
-                                var mesh = currentLocking.destroy();
-                                currentLocking = null;
-                                currentMover = CreateMover(mesh);
+                        if (ret != PandaCardBoard.AnimationState.InProgress) {
+                            var mesh = currentLocking.destroy();
+                            currentLocking = null;
+                            if (ret == PandaCardBoard.AnimationState.Success) {
                                 group.position.x = 0;
                                 group.rotation.z = 0;
                                 currentHover = null;
-                                SetStateTo(State.Moving);
+                                currentMover = CreateMover(mesh);
+                            }
                         }
                     }
                 }
                 else if (state == State.None) {
-                    var sect_1 = getFrontObject();
-                    if (sect_1 != null && sect_1.distance < GRAB_FACTOR * CUBE_SIZE) {
+                    var sect = getFrontObject();
+                    if (sect != null && sect.distance < GRAB_FACTOR * CUBE_SIZE) {
                         SetStateTo(State.Locking);
-                        currentLocking = new PandaCardBoard.Locker(sect_1.object.userData, container1.getRayCaster(), 1500, GRAB_FACTOR * CUBE_SIZE);
+                        currentLocking = new PandaCardBoard.Locker(sect.object.userData, container1.getRayCaster(), 1500, GRAB_FACTOR * CUBE_SIZE);
                     }
                 }
                 else if (state == State.Locking) {
@@ -120,7 +116,6 @@ var PandaCardBoard;
                     else if (lockingState == PandaCardBoard.AnimationState.Success) {
                         var mesh = currentLocking.destroy();
                         currentLocking = null;
-                        SetStateTo(State.Moving);
                         currentMover = CreateMover(mesh);
                     }
                 }
@@ -131,8 +126,6 @@ var PandaCardBoard;
                         currentMover = null;
                         var idx = group.children.indexOf(mesh.mesh);
                         group.children.splice(idx, 1);
-                        mesh.mesh.userData = null;
-                        mesh.mesh = null;
                         SetStateTo(State.None);
                     }
                 }
