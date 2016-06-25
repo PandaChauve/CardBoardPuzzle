@@ -6,7 +6,6 @@ namespace  PandaCardBoard {
         private _effect : THREE.StereoEffect;
         private _controls : any;
         private _container : HTMLElement ;
-        private _clock : THREE.Clock;
         private _raycaster: THREE.Raycaster;
 
 
@@ -15,7 +14,6 @@ namespace  PandaCardBoard {
 
         constructor(id : string){
             this._raycaster = new THREE.Raycaster();
-            this._clock = new THREE.Clock();
             this._renderer = new THREE.WebGLRenderer({
                 antialias : true
             });
@@ -39,6 +37,20 @@ namespace  PandaCardBoard {
             this._controls.noPan = true;
         }
 
+        public getFrontObject(targets: THREE.Object3D[], distance : number):THREE.Intersection {
+            var intersects = this.getRayCaster().intersectObjects(targets);
+            var sect = null;
+            var dist = distance;
+            for (var i = 0; i < intersects.length; i++) {
+                if(dist < 0)
+                    dist = intersects[i].distance;
+                if (intersects[i].distance <= dist) {
+                    dist = intersects[i].distance;
+                    sect = intersects[i];
+                }
+            }
+            return sect;
+        }
         public AddStereoEffect() : void {
             this._effect = new THREE.StereoEffect(this._renderer);
         }
@@ -77,13 +89,14 @@ namespace  PandaCardBoard {
             else
                 this._renderer.setSize(width, height );
         }
-        public update(){
+
+        public update(delta: number){
             this.resize();
             this._camera.updateProjectionMatrix();
-            this._controls.update(this._clock.getDelta());
+            this._controls.update(delta);
             var mouse = new THREE.Vector2();
             mouse.x = 0;
-            mouse.y = 0; //FIXME
+            mouse.y = 0; 
             this._raycaster.setFromCamera(mouse, this._camera);
         }
 

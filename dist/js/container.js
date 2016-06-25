@@ -3,7 +3,6 @@ var PandaCardBoard;
     var GraphicalContainer = (function () {
         function GraphicalContainer(id) {
             this._raycaster = new THREE.Raycaster();
-            this._clock = new THREE.Clock();
             this._renderer = new THREE.WebGLRenderer({
                 antialias: true
             });
@@ -19,6 +18,20 @@ var PandaCardBoard;
             this._controls.noZoom = true;
             this._controls.noPan = true;
         }
+        GraphicalContainer.prototype.getFrontObject = function (targets, distance) {
+            var intersects = this.getRayCaster().intersectObjects(targets);
+            var sect = null;
+            var dist = distance;
+            for (var i = 0; i < intersects.length; i++) {
+                if (dist < 0)
+                    dist = intersects[i].distance;
+                if (intersects[i].distance <= dist) {
+                    dist = intersects[i].distance;
+                    sect = intersects[i];
+                }
+            }
+            return sect;
+        };
         GraphicalContainer.prototype.AddStereoEffect = function () {
             this._effect = new THREE.StereoEffect(this._renderer);
         };
@@ -58,10 +71,10 @@ var PandaCardBoard;
             else
                 this._renderer.setSize(width, height);
         };
-        GraphicalContainer.prototype.update = function () {
+        GraphicalContainer.prototype.update = function (delta) {
             this.resize();
             this._camera.updateProjectionMatrix();
-            this._controls.update(this._clock.getDelta());
+            this._controls.update(delta);
             var mouse = new THREE.Vector2();
             mouse.x = 0;
             mouse.y = 0;

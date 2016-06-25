@@ -1,17 +1,56 @@
 namespace  PandaCardBoard.FourInARow {
-    export class Game{
+    enum State{
+        Player,
+        Locking,
+        IA
+    }
+    export class Game implements IRunnable{
         private _grid = new Grid();
         private _ia = new BasicIA(this._grid, Token.Blue);
-        constructor(private _container : GraphicalContainer){
-            let token = Token.Blue;
-            while(!this._grid.isWon() && ! this._grid.isDraw())
-            {
-                var column = Token.Blue == token ? this._ia.play() : this.getUserPlay();
-                this._grid.addToColumn(token, column);
-                token = Token.Blue == token ? Token.Red : Token.Blue;
-            }
+        private _drawer: Drawer;
+        private _state = State.IA;
+        private _container : GraphicalContainer;
+        private _locker : Locker;
+        constructor(){
+        }
 
-            this._container;
+        init(cont:PandaCardBoard.GraphicalContainer):void{
+            this._container = cont;
+            this._drawer = new Drawer(cont, this._grid);
+
+        }
+        update(delta:number):void{
+            if(this._drawer.update(delta)) // animation in progress
+                return;
+            if(this._grid.isDraw() || this._grid.isWon())
+                return;
+            switch(this._state){
+                case State.IA:
+                    var p = this._ia.play();
+                    this._grid.addToColumn(Token.Blue, p);
+                    this._state = State.Player;
+                    break;
+                case State.Player:
+                    this._locker = this._drawer.GetLock();
+                    if(this._locker != null){
+                        this._state = State.Locking;
+                    }
+                    break;
+                case State.Locking:
+                    let lockState = this._locker.update();
+                    if(lockState == AnimationState.Failed){
+                        this._locker.destroy();
+                        this._locker = null;
+                        this._state = State.Player;
+                    }
+                    else if(lockState == AnimationState.Success){
+                        let locked = this._locker.destroy();
+                        this._locker = null;
+                        this._grid.addToColumn(Token.Red, (<GameToken>locked).Id);
+                        this._state = State.IA;
+                    }
+                    break;
+            }
         }
     }
 }

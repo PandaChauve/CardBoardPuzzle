@@ -4,9 +4,10 @@ namespace  PandaCardBoard.FourInARow{
         Red = 1,
         Blue = 2
     }
-    export class Grid{
+    export class Grid implements Utils.IEventEmitter{
         private _data : Token[][];
         private _size = 8;
+        private _eventhandler = new Utils.EventEmitter();
         constructor(){
             this._data = [];
             for(let idx = 0; idx < this._size; idx++ ){
@@ -15,6 +16,14 @@ namespace  PandaCardBoard.FourInARow{
                     this._data[idx][idx2] = Token.None;
                 }
             }
+        }
+
+        public subscribe(callback: (event: Utils.IEvent) => void) : number{
+            return this._eventhandler.subscribe(callback);
+        }
+
+        public unSubscribe(id: number) : void{
+            this._eventhandler.unSubscribe(id);
         }
 
         public isDraw(){
@@ -37,11 +46,22 @@ namespace  PandaCardBoard.FourInARow{
         public addToColumn(token : Token, position : number) : void{
             if(!this.canAddToColumn(position))
                 throw "Invalid column";
+            let idx = 0;
+            while(this._data[position][idx] != Token.None)
+                idx++;
 
-            for(let idx = 0; idx < this._size; ++idx)
-                if(this._data[position][idx] == Token.None )
-                    this._data[position][idx] = token;
+            this._data[position][idx] = token;
 
+
+            this._eventhandler.notify({
+                name: 'newToken',
+                sender : this,
+                content : {
+                    x : position,
+                    y : idx,
+                    color : token
+                }
+            })
         }
 
         public isWon() : boolean{

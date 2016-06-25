@@ -1,159 +1,179 @@
-namespace  PandaCardBoard{
+namespace  PandaCardBoard {
 
-enum State{
-    Start,
-    None,
-    Moving,
-    Locking
-}
-
-export class UrlParser{
-    private _search;
-    // see http://medialize.github.io/URI.js/ for more complex url
-    constructor(){
-        var data = document.createElement('a');
-        data.href = window.location.href;
-        this._search = data.search;
+    enum State{
+        Start,
+        None,
+        Moving,
+        Locking
     }
 
-    debug() : boolean{
-        return this._search.lastIndexOf("debug") != -1;
+    export class UrlParser {
+        private _search;
+        // see http://medialize.github.io/URI.js/ for more complex url
+        constructor() {
+            var data = document.createElement('a');
+            data.href = window.location.href;
+            this._search = data.search;
+        }
+
+        debug():boolean {
+            return this._search.lastIndexOf("debug") != -1;
+        }
+        demo():boolean {
+            return this._search.lastIndexOf("4ir") == -1;
+        }
     }
-}
 
-    export class All {
-    constructor() {}
-    run(config : UrlParser){
-        var container1 = new GraphicalContainer('example');
+    export interface IRunnable{
+        init : (cont :GraphicalContainer ) => void
+        update : (delta:number ) => void
+    }
 
-        if(!config.debug())
-            container1.AddStereoEffect();
-        container1.AddDeviceOrientation();
-        var group = new THREE.Group();
+    export class Demo implements IRunnable{
 
-        var CUBE_SIZE = 100;
-        var GRAB_FACTOR = 5;
-        init();
-        group.position.x = 600;
-        group.rotation.z = Math.PI / 2;
-        let state  = State.Start;
-        animate();
+        private group = new THREE.Group();
 
-        function init() {
+        private currentLocking = <Locker>null;
+        private currentMover = <MoveTo>null;
+        private CUBE_SIZE = 100;
+        private GRAB_FACTOR = 5;
+        private state : State;
+        private container1 : GraphicalContainer;
+        private currentHover = null;
+
+        constructor() {
+        }
+
+
+
+        public init(cont : GraphicalContainer) : void{
+            this.container1 = cont;
+            this.group.position.x = 600;
+            this.group.rotation.z = Math.PI / 2;
+            this.state = State.Start;
             var light = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.60);
-            container1.scene.add(light);
-
-            function AddCube(x : number, y : number, z : number) {
-                var cube = new PandaCardBoard.Cube(x,y,z);
+            this.container1.scene.add(light);
+            var group = this.group;
+            function AddCube(x:number, y:number, z:number) {
+                var cube = new PandaCardBoard.Cube(x, y, z);
                 group.add(cube.mesh);
             }
-            container1.scene.add(group);
-            AddCube(0.9 * GRAB_FACTOR, 0, 0);
+
+            this.container1.scene.add(this.group);
+            AddCube(0.9 * this.GRAB_FACTOR, 0, 0);
             AddCube(0, 0, 0);
-            AddCube(GRAB_FACTOR, GRAB_FACTOR, 0);
-            AddCube(0, 0.9 * GRAB_FACTOR, 0);
-            AddCube(-GRAB_FACTOR, GRAB_FACTOR, 0);
-            AddCube(-0.9 * GRAB_FACTOR, 0, 0);
-            AddCube(-GRAB_FACTOR, -GRAB_FACTOR, 0);
-            AddCube(0, -0.9 * GRAB_FACTOR, 0);
-            AddCube(GRAB_FACTOR, -GRAB_FACTOR, 0);
+            AddCube(this.GRAB_FACTOR, this.GRAB_FACTOR, 0);
+            AddCube(0, 0.9 * this.GRAB_FACTOR, 0);
+            AddCube(-this.GRAB_FACTOR, this.GRAB_FACTOR, 0);
+            AddCube(-0.9 * this.GRAB_FACTOR, 0, 0);
+            AddCube(-this.GRAB_FACTOR, -this.GRAB_FACTOR, 0);
+            AddCube(0, -0.9 * this.GRAB_FACTOR, 0);
+            AddCube(this.GRAB_FACTOR, -this.GRAB_FACTOR, 0);
         }
 
-        var currentLocking = <Locker>null;
-        var currentMover = <MoveTo>null;
 
-        function SetStateTo(newState : State) {
+        private SetStateTo(newState:State) {
             console.log("new state " + newState);
-            state = newState;
+            this.state = newState;
         }
 
-        function getFrontObject() : THREE.Intersection {
-            var intersects = container1.getRayCaster().intersectObjects(group.children);
-            var sect = null;
-            var dist = 100000;
-            for (var i = 0; i < intersects.length; i++) {
-                if (intersects[i].distance < dist) {
-                    dist = intersects[i].distance;
-                    sect = intersects[i];
-                }
-            }
-            return sect;
+        private getFrontObject():THREE.Intersection {
+            return this.container1.getFrontObject(this.group.children, -1);
         }
 
-        function CreateMover(dest : Element) {
-            SetStateTo(State.Moving);
-            return new MoveTo(dest, group);
+        private CreateMover(dest:Element) {
+            this.SetStateTo(State.Moving);
+            return new MoveTo(dest, this.group);
         }
 
-        var currentHover = null;
 
-        function render() {
-            if (state == State.Start) {
-                if(!currentLocking) {
-                    let sect = getFrontObject();
-                    if (sect)
-                    {
-                        currentLocking = new Locker(sect.object.userData, container1.getRayCaster(), 3000);
-                        currentHover = sect.object;
+        update(delta : number) : void{
+            if (this.state == State.Start) {
+                if (!this.currentLocking) {
+                    let sect = this.getFrontObject();
+                    if (sect) {
+                        this.currentLocking = new Locker(sect.object.userData, this.container1.getRayCaster(), 3000);
+                        this.currentHover = sect.object;
                     }
                 }
-                else{
-                    let ret = currentLocking.update();
-                    if(ret != AnimationState.InProgress){
-                        let mesh = currentLocking.destroy();
-                        currentLocking = null;
-                        if(ret == AnimationState.Success){
-                            group.position.x = 0;
-                            group.rotation.z = 0;
-                            currentHover = null;
-                            currentMover = CreateMover(mesh);
+                else {
+                    let ret = this.currentLocking.update();
+                    if (ret != AnimationState.InProgress) {
+                        let mesh = this.currentLocking.destroy();
+                        this.currentLocking = null;
+                        if (ret == AnimationState.Success) {
+                            this.group.position.x = 0;
+                            this.group.rotation.z = 0;
+                            this.currentHover = null;
+                            this.currentMover = this.CreateMover(mesh);
                         }
                     }
                 }
-            } else if (state == State.None) {
-                let sect = getFrontObject();
-                if (sect != null && sect.distance < GRAB_FACTOR * CUBE_SIZE) {
-                    SetStateTo(State.Locking);
-                    currentLocking = new Locker(sect.object.userData, container1.getRayCaster(), 1500, GRAB_FACTOR * CUBE_SIZE);
+            } else if (this.state == State.None) {
+                let sect = this.getFrontObject();
+                if (sect != null && sect.distance < this.GRAB_FACTOR * this.CUBE_SIZE) {
+                    this.SetStateTo(State.Locking);
+                    this.currentLocking = new Locker(sect.object.userData, this.container1.getRayCaster(), 1500, this.GRAB_FACTOR * this.CUBE_SIZE);
                 }
-            } else if (state == State.Locking) {
-                let lockingState = currentLocking.update();
+            } else if (this.state == State.Locking) {
+                let lockingState = this.currentLocking.update();
                 if (lockingState == AnimationState.Failed) {
-                    currentLocking.destroy();
-                    currentLocking = null;
-                    SetStateTo(State.None);
+                    this.currentLocking.destroy();
+                    this.currentLocking = null;
+                    this.SetStateTo(State.None);
                 } else if (lockingState == AnimationState.Success) {
-                    let mesh = currentLocking.destroy();
-                    currentLocking = null;
-                    currentMover = CreateMover(mesh);
+                    let mesh = this.currentLocking.destroy();
+                    this.currentLocking = null;
+                    this.currentMover = this.CreateMover(mesh);
                 }
 
-            } else if (state == State.Moving) {
-                let moveState = currentMover.update();
-                if(moveState == AnimationState.Success){
-                    let mesh = currentMover.destroy();
-                    currentMover = null;
-                    let idx = group.children.indexOf(mesh.mesh);
-                    group.children.splice(idx, 1);
-                    SetStateTo(State.None);
+            } else if (this.state == State.Moving) {
+                let moveState = this.currentMover.update();
+                if (moveState == AnimationState.Success) {
+                    let mesh = this.currentMover.destroy();
+                    this.currentMover = null;
+                    let idx = this.group.children.indexOf(mesh.mesh);
+                    this.group.children.splice(idx, 1);
+                    this.SetStateTo(State.None);
                 }
             }
         }
+    }
 
-        function animate() {
-            requestAnimationFrame(animate);
-            container1.update();
-            render();
-            container1.render();
+    export class All {
+        private _clock = new THREE.Clock(false);
+        constructor() {
+
         }
 
+        run(config:UrlParser, game : IRunnable) {
+            this._clock.start();
+            var container1 = new GraphicalContainer('example');
 
+            if (!config.debug())
+                container1.AddStereoEffect();
+            container1.AddDeviceOrientation();
+
+            game.init(container1);
+
+            var clock = this._clock;
+            function animate() {
+                requestAnimationFrame(animate);
+                container1.update(clock.getDelta());
+                game.update(clock.getDelta());
+                container1.render();
+            }
+
+            animate();
+
+
+        }
     }
-}
 
 }
 
-document.addEventListener("DOMContentLoaded", function(){
+document.addEventListener("DOMContentLoaded", function () {
     var greeter = new PandaCardBoard.All();
-    greeter.run( new PandaCardBoard.UrlParser())
+    var p = new PandaCardBoard.UrlParser();
+    greeter.run(p, p.demo() ? new PandaCardBoard.Demo() : new PandaCardBoard.FourInARow.Game());
 });

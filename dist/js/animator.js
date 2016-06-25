@@ -40,17 +40,19 @@ var PandaCardBoard;
     PandaCardBoard.Animator = Animator;
     var Locker = (function (_super) {
         __extends(Locker, _super);
-        function Locker(mesh, caster, duration, range) {
+        function Locker(elem, caster, duration, range) {
             if (duration === void 0) { duration = 1500; }
-            if (range === void 0) { range = 100000; }
-            _super.call(this, mesh, duration);
+            if (range === void 0) { range = -1; }
+            _super.call(this, elem, duration);
             this._raycaster = caster;
             this._range = range;
         }
         Locker.prototype.validator = function () {
             var intersects = this._raycaster.intersectObject(this._element.mesh);
             for (var i = 0; i < intersects.length; i++) {
-                if (intersects[i].distance < this._range) {
+                if (this._range < 0)
+                    this._range = intersects[i].distance;
+                if (intersects[i].distance <= this._range) {
                     return true;
                 }
             }

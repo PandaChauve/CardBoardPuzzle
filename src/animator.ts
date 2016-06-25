@@ -52,9 +52,9 @@ namespace  PandaCardBoard{
         private _raycaster : THREE.Raycaster;
         private _range : number;
 
-        public constructor(mesh : Element, caster : THREE.Raycaster, duration: number = 1500, range : number = 100000)
+        public constructor(elem : Element, caster : THREE.Raycaster, duration: number = 1500, range : number = -1)
         {
-            super(mesh, duration);
+            super(elem, duration);
             this._raycaster = caster;
             this._range = range;
         }
@@ -62,7 +62,9 @@ namespace  PandaCardBoard{
         protected validator():boolean {
             var intersects = this._raycaster.intersectObject(this._element.mesh);
             for (var i = 0; i < intersects.length; i++) {
-                if (intersects[i].distance < this._range) {
+                if(this._range < 0)
+                    this._range = intersects[i].distance;
+                if (intersects[i].distance <= this._range) {
                     return true;
                 }
             }
