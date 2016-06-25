@@ -46,7 +46,7 @@ namespace  PandaCardBoard.FourInARow {
                     else if(lockState == AnimationState.Success){
                         let locked = this._locker.destroy();
                         this._locker = null;
-                        this._grid.addToColumn(Token.Red, (<GameToken>locked).Id);
+                        this._grid.addToColumn(Token.Red, (<Button>locked).Id);
                         this._state = State.IA;
                     }
                     break;

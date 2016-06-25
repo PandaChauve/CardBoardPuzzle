@@ -11,7 +11,7 @@ namespace  PandaCardBoard.FourInARow {
             var that = this;
             return function(event : Utils.IEvent):void{
                 if(event.name == 'newToken'){
-                    var cube = new PandaCardBoard.GameToken(event.content.x*2 - that._grid.getSize(),event.content.y, event.content.x, 0);
+                    var cube = new PandaCardBoard.GameToken(20,event.content.x*1.5 - that._grid.getSize()*0.75, event.content.y*1.5-that._grid.getSize()*0.75, event.content.color-1 );
                     that._group.add(cube.mesh);
                 }
             }
@@ -22,7 +22,7 @@ namespace  PandaCardBoard.FourInARow {
             this._lockers.userData = this;
             this._container.scene.add(this._lockers);
             for(let idx = 0; idx < this._grid.getSize(); ++idx){
-                var cube = new PandaCardBoard.GameToken(idx*2 - this._grid.getSize(),this._grid.getSize()+1, 0, idx);
+                var cube = new PandaCardBoard.Button(20 , idx*1.5 - this._grid.getSize()*0.75, this._grid.getSize()*1.5+2 - this._grid.getSize()*0.75, idx);
                 this._lockers.add(cube.mesh);
             }
             this._group.userData = this;

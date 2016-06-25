@@ -79,37 +79,31 @@ namespace  PandaCardBoard{
         }
     }
 
-
     export class GameToken implements Element{
         private static _size = 100;
         private static _geometry : THREE.BoxGeometry;
-        private static _baseMaterial:THREE.MeshBasicMaterial;
-        private static _baseMaterial2:THREE.MeshBasicMaterial;
-        private static _destroyMaterial:THREE.MeshBasicMaterial;
-        private static _lockMaterial:THREE.MeshBasicMaterial;
+        private static _baseMaterial:THREE.MeshBasicMaterial[];
+        private static _lockMaterial:THREE.MeshBasicMaterial[];
 
         private _state = CubeState.Normal;
 
         public mesh : THREE.Mesh;
 
-        public constructor(x:number,y:number,z:number, public Id:number){
+        public constructor(x:number,y:number,z:number, private _tokenColor : number){
             if(GameToken._geometry == null){
 
                 GameToken._geometry = new THREE.BoxGeometry(GameToken._size, GameToken._size, GameToken._size, 10, 10, 10);
-                GameToken._baseMaterial = new THREE.MeshBasicMaterial({color: 0x0fffff, wireframe: true});
-                GameToken._baseMaterial2 = new THREE.MeshBasicMaterial({color: 0x0fff0f, wireframe: true});
-                GameToken._destroyMaterial = new THREE.MeshBasicMaterial({
-                    color: 0x0fff00,
-                    wireframe: true,
-                    transparent: true
-                });
-                GameToken._lockMaterial = new THREE.MeshBasicMaterial({
+                GameToken._baseMaterial = [new THREE.MeshBasicMaterial({color: 0x0fffff}), new THREE.MeshBasicMaterial({color: 0x0f0fff})];
+                GameToken._lockMaterial = [new THREE.MeshBasicMaterial({
                     color: 0x0fffff,
                     wireframe: true
-                });
+                }),new THREE.MeshBasicMaterial({
+                    color: 0x0f0fff,
+                    wireframe: true
+                })];
 
             }
-            this.mesh = new THREE.Mesh(GameToken._geometry, GameToken._baseMaterial);
+            this.mesh = new THREE.Mesh(GameToken._geometry, GameToken._baseMaterial[this._tokenColor]);
             this.mesh.position.x = x * GameToken._size;
             this.mesh.position.y = z * GameToken._size;
             this.mesh.position.z = y * GameToken._size;
@@ -122,24 +116,24 @@ namespace  PandaCardBoard{
         public lock(ratio : number):void{
             console.assert(this._state == CubeState.Normal || this._state == CubeState.Lock);
             this._state = CubeState.Lock;
-            this.mesh.material = GameToken._lockMaterial;
-            GameToken._lockMaterial.color.b = 1 - ratio;
+            this.mesh.material = GameToken._lockMaterial[this._tokenColor];
+            GameToken._lockMaterial[this._tokenColor].color.b = 1 - ratio;
         }
 
         public destroy(ratio : number):void{
-            console.assert(this._state == CubeState.Normal || this._state == CubeState.Destroy);
-            this._state = CubeState.Destroy;
-            this.mesh.material = GameToken._destroyMaterial;
-            if(ratio > 0.8)
-                ratio = 0.8;
-            GameToken._destroyMaterial.opacity = 1 - ratio/0.8;
         }
 
         public reset():void{
-            GameToken._lockMaterial.color.b = 1;
-            GameToken._destroyMaterial.opacity = 1;
-            this.mesh.material = GameToken._baseMaterial;
+            GameToken._lockMaterial[this._tokenColor].color.b = 1;
+            this.mesh.material = GameToken._baseMaterial[this._tokenColor];
             this._state = CubeState.Normal;
+        }
+    }
+
+    export class Button extends GameToken{
+
+        public constructor(x:number,y:number,z:number, public Id:number){
+            super(x,y,z,0);
         }
     }
 
