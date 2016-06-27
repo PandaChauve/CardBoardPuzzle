@@ -20,13 +20,13 @@ namespace  PandaCardBoard.FourInARow {
         private drawGrid() : void{
             this._lockers = new THREE.Group();
             this._lockers.userData = this;
-            this._container.scene.add(this._lockers);
+            this._container.AddGroup(this._lockers);
             for(let idx = 0; idx < this._grid.getSize(); ++idx){
                 var cube = new PandaCardBoard.Button(20 , idx*1.5 - this._grid.getSize()*0.75, this._grid.getSize()*1.5+2 - this._grid.getSize()*0.75, idx);
                 this._lockers.add(cube.mesh);
             }
             this._group.userData = this;
-            this._container.scene.add(this._group);
+            this._container.AddGroup(this._group);
         }
 
         public GetLock() : Locker{
@@ -37,6 +37,10 @@ namespace  PandaCardBoard.FourInARow {
             return null;
         }
 
+        public destroy() : void{
+            this._container.RemoveGroup(this._group);
+            this._container.RemoveGroup(this._lockers);
+        }
         /**
          *
          * @param dt : delta time

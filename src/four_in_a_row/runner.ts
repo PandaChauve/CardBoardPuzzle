@@ -4,7 +4,7 @@ namespace  PandaCardBoard.FourInARow {
         Locking,
         IA
     }
-    export class Game implements IRunnable{
+    export class Runner implements IRunnable{
         private _grid = new Grid();
         private _ia = new BasicIA(this._grid, Token.Blue);
         private _drawer: Drawer;
@@ -19,7 +19,7 @@ namespace  PandaCardBoard.FourInARow {
             this._drawer = new Drawer(cont, this._grid);
 
         }
-        update(delta:number):void{
+        update(delta:number):IRunnable{
             if(this._drawer.update(delta)) // animation in progress
                 return;
             if(this._grid.isDraw() || this._grid.isWon())
@@ -51,6 +51,11 @@ namespace  PandaCardBoard.FourInARow {
                     }
                     break;
             }
+            return null;
+        }
+
+        destroy():void{
+
         }
     }
 }

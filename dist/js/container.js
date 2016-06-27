@@ -8,10 +8,10 @@ var PandaCardBoard;
             });
             this._container = document.getElementById(id);
             this._container.appendChild(this._renderer.domElement);
-            this.scene = new THREE.Scene();
+            this._scene = new THREE.Scene();
             this._camera = new THREE.PerspectiveCamera(90, 1, 0.001, 10000);
             this._camera.position.set(0, 10, 0);
-            this.scene.add(this._camera);
+            this._scene.add(this._camera);
             this._controls = new THREE.OrbitControls(this._camera, this._renderer.domElement);
             this._controls.rotateUp(Math.PI / 4);
             this._controls.target.set(this._camera.position.x + 0.1, this._camera.position.y, this._camera.position.z);
@@ -82,9 +82,15 @@ var PandaCardBoard;
         };
         GraphicalContainer.prototype.render = function () {
             if (this._effect)
-                this._effect.render(this.scene, this._camera);
+                this._effect.render(this._scene, this._camera);
             else
-                this._renderer.render(this.scene, this._camera);
+                this._renderer.render(this._scene, this._camera);
+        };
+        GraphicalContainer.prototype.AddGroup = function (group) {
+            this._scene.add(group);
+        };
+        GraphicalContainer.prototype.RemoveGroup = function (group) {
+            this._scene.remove(group);
         };
         GraphicalContainer.prototype.getRayCaster = function () {
             return this._raycaster;

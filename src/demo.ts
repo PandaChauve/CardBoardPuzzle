@@ -23,15 +23,13 @@ namespace  PandaCardBoard {
             this.group.position.x = 600;
             this.group.rotation.z = Math.PI / 2;
             this.state = State.Start;
-            var light = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.60);
-            this.container1.scene.add(light);
             var group = this.group;
             function AddCube(x:number, y:number, z:number) {
                 var cube = new PandaCardBoard.Cube(x, y, z);
                 group.add(cube.mesh);
             }
 
-            this.container1.scene.add(this.group);
+            this.container1.AddGroup(this.group);
             AddCube(0.9 * this.GRAB_FACTOR, 0, 0);
             AddCube(0, 0, 0);
             AddCube(this.GRAB_FACTOR, this.GRAB_FACTOR, 0);
@@ -59,7 +57,7 @@ namespace  PandaCardBoard {
         }
 
 
-        update(delta : number) : void{
+        update(delta : number) : IRunnable{
             if (this.state == State.Start) {
                 if (!this.currentLocking) {
                     let sect = this.getFrontObject();
@@ -109,6 +107,11 @@ namespace  PandaCardBoard {
                     this.SetStateTo(State.None);
                 }
             }
+            return null;
+        }
+
+        destroy():void{
+            this.container1.RemoveGroup(this.group);
         }
     }
 }

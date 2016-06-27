@@ -1,29 +1,8 @@
 namespace  PandaCardBoard {
-
-
-    export class UrlParser {
-        private _search;
-        // see http://medialize.github.io/URI.js/ for more complex url
-        constructor() {
-            var data = document.createElement('a');
-            data.href = window.location.href;
-            this._search = data.search;
-        }
-
-        debug():boolean {
-            return this._search.lastIndexOf("debug") != -1;
-        }
-        p4():boolean {
-            return this._search.lastIndexOf("4ir") != -1;
-        }
-        sphere():boolean {
-            return this._search.lastIndexOf("sphere") != -1;
-        }
-    }
-
     export interface IRunnable{
         init : (cont :GraphicalContainer ) => void
-        update : (delta:number ) => void
+        update : (delta:number ) => IRunnable
+        destroy : () => void
     }
 
     export class Runner {
@@ -32,7 +11,7 @@ namespace  PandaCardBoard {
 
         }
 
-        run(config:UrlParser, game : IRunnable) {
+        run(config:Utils.UrlParser, game : IRunnable) {
             this._clock.start();
             var container1 = new GraphicalContainer('example');
 
@@ -46,20 +25,23 @@ namespace  PandaCardBoard {
             function animate() {
                 requestAnimationFrame(animate);
                 container1.update(clock.getDelta());
-                game.update(clock.getDelta());
+                let newRunner = game.update(clock.getDelta());
                 container1.render();
+
+                if(newRunner != null){
+                    game.destroy();
+                    game = newRunner;
+                    game.init(container1);
+                }
             }
 
             animate();
-
-
         }
     }
-
 }
 
 document.addEventListener("DOMContentLoaded", function () {
     var greeter = new PandaCardBoard.Runner();
-    var p = new PandaCardBoard.UrlParser();
-    greeter.run(p, p.sphere() ? new PandaCardBoard.Icosphere.Sphere() : !p.p4() ? new PandaCardBoard.Demo() : new PandaCardBoard.FourInARow.Game());
+    var p = new PandaCardBoard.Utils.UrlParser();
+    greeter.run(p, p.sphere() ? new PandaCardBoard.Icosphere.Runner() : !p.p4() ? new PandaCardBoard.Demo() : new PandaCardBoard.FourInARow.Runner());
 });

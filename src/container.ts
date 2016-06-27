@@ -7,9 +7,7 @@ namespace  PandaCardBoard {
         private _controls : any;
         private _container : HTMLElement ;
         private _raycaster: THREE.Raycaster;
-
-
-        public scene : THREE.Scene;
+        private _scene : THREE.Scene;
 
 
         constructor(id : string){
@@ -21,11 +19,11 @@ namespace  PandaCardBoard {
             this._container = document.getElementById(id);
             this._container.appendChild(this._renderer.domElement);
 
-            this.scene = new THREE.Scene();
+            this._scene = new THREE.Scene();
             this._camera = new THREE.PerspectiveCamera(90, 1, 0.001, 10000);
 
             this._camera.position.set(0, 10, 0);
-            this.scene.add(this._camera);
+            this._scene.add(this._camera);
             this._controls = new THREE.OrbitControls(this._camera, this._renderer.domElement);
             this._controls.rotateUp(Math.PI / 4);
             this._controls.target.set(
@@ -102,9 +100,17 @@ namespace  PandaCardBoard {
 
         public render(){
             if(this._effect)
-                this._effect.render(this.scene, this._camera);
+                this._effect.render(this._scene, this._camera);
             else
-                this._renderer.render(this.scene, this._camera);
+                this._renderer.render(this._scene, this._camera);
+        }
+
+        public AddGroup(group : THREE.Group):void{
+            this._scene.add(group);
+        }
+
+        public RemoveGroup(group : THREE.Group){
+            this._scene.remove(group);
         }
 
         public getRayCaster() : THREE.Raycaster

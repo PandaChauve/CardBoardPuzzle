@@ -1,23 +1,5 @@
 var PandaCardBoard;
 (function (PandaCardBoard) {
-    var UrlParser = (function () {
-        function UrlParser() {
-            var data = document.createElement('a');
-            data.href = window.location.href;
-            this._search = data.search;
-        }
-        UrlParser.prototype.debug = function () {
-            return this._search.lastIndexOf("debug") != -1;
-        };
-        UrlParser.prototype.p4 = function () {
-            return this._search.lastIndexOf("4ir") != -1;
-        };
-        UrlParser.prototype.sphere = function () {
-            return this._search.lastIndexOf("sphere") != -1;
-        };
-        return UrlParser;
-    }());
-    PandaCardBoard.UrlParser = UrlParser;
     var Runner = (function () {
         function Runner() {
             this._clock = new THREE.Clock(false);
@@ -33,8 +15,13 @@ var PandaCardBoard;
             function animate() {
                 requestAnimationFrame(animate);
                 container1.update(clock.getDelta());
-                game.update(clock.getDelta());
+                var newRunner = game.update(clock.getDelta());
                 container1.render();
+                if (newRunner != null) {
+                    game.destroy();
+                    game = newRunner;
+                    game.init(container1);
+                }
             }
             animate();
         };
@@ -44,6 +31,6 @@ var PandaCardBoard;
 })(PandaCardBoard || (PandaCardBoard = {}));
 document.addEventListener("DOMContentLoaded", function () {
     var greeter = new PandaCardBoard.Runner();
-    var p = new PandaCardBoard.UrlParser();
-    greeter.run(p, p.sphere() ? new PandaCardBoard.Icosphere.Sphere() : !p.p4() ? new PandaCardBoard.Demo() : new PandaCardBoard.FourInARow.Game());
+    var p = new PandaCardBoard.Utils.UrlParser();
+    greeter.run(p, p.sphere() ? new PandaCardBoard.Icosphere.Runner() : !p.p4() ? new PandaCardBoard.Demo() : new PandaCardBoard.FourInARow.Runner());
 });
