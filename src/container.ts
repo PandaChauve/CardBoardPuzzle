@@ -27,15 +27,15 @@ namespace  PandaCardBoard {
 
             this._camera.position.set(0, 0, 0);
             this._scene.add(this._camera);
-            this._controls = new THREE.MouseControls(this._camera/*, this._renderer.domElement*/);
-            /*
+            this._controls = new THREE.OrbitControls(this._camera, this._renderer.domElement);
+
             this._controls.target.set(
                 this._camera.position.x + 0.1,
                 this._camera.position.y,
                 this._camera.position.z
             );
             this._controls.noZoom = true;
-            this._controls.noPan = true;*/
+            this._controls.noPan = true;
         }
 
         public getFrontObject(targets: THREE.Object3D[], distance : number):THREE.Intersection {
