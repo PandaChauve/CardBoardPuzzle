@@ -49,6 +49,7 @@ namespace  PandaCardBoard.Icosphere {
                 else if(state == AnimationState.Success){
                     this._lock.destroy();
                     this._lock = null;
+                    this._container.OffsetCamera();
                     return new FourInARow.Runner();
                 }
             }

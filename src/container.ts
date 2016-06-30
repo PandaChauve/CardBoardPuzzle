@@ -8,6 +8,7 @@ namespace  PandaCardBoard {
         private _container : HTMLElement ;
         private _raycaster: THREE.Raycaster;
         private _scene : THREE.Scene;
+        public _mainGroup : THREE.Group;
 
 
         constructor(id : string){
@@ -20,19 +21,21 @@ namespace  PandaCardBoard {
             this._container.appendChild(this._renderer.domElement);
 
             this._scene = new THREE.Scene();
+            this._mainGroup = new THREE.Group();
+            this._scene.add(this._mainGroup);
             this._camera = new THREE.PerspectiveCamera(90, 1, 0.001, 10000);
 
-            this._camera.position.set(0, 10, 0);
+            this._camera.position.set(0, 0, 0);
             this._scene.add(this._camera);
-            this._controls = new THREE.OrbitControls(this._camera, this._renderer.domElement);
-            this._controls.rotateUp(Math.PI / 4);
+            this._controls = new THREE.MouseControls(this._camera/*, this._renderer.domElement*/);
+            /*
             this._controls.target.set(
                 this._camera.position.x + 0.1,
                 this._camera.position.y,
                 this._camera.position.z
             );
             this._controls.noZoom = true;
-            this._controls.noPan = true;
+            this._controls.noPan = true;*/
         }
 
         public getFrontObject(targets: THREE.Object3D[], distance : number):THREE.Intersection {
@@ -49,30 +52,39 @@ namespace  PandaCardBoard {
             }
             return sect;
         }
+
+        public OffsetCamera(){
+            var vec = new THREE.Vector3( 0, 0, -20*100 );
+            vec.applyQuaternion( this._camera.quaternion );
+            this._mainGroup.position.copy( vec );
+            this._mainGroup.lookAt(this._camera.position);
+        }
+
         public AddStereoEffect() : void {
             this._effect = new THREE.StereoEffect(this._renderer);
         }
 
         public AddDeviceOrientation(): void{
+            var that = <any>this;
             function fullscreen() {
-                if (this._container.requestFullscreen) {
-                    this._container.requestFullscreen();
-                } else if (this._container.msRequestFullscreen) {
-                    this._container.msRequestFullscreen();
-                } else if (this._container.mozRequestFullScreen) {
-                    this._container.mozRequestFullScreen();
-                } else if (this._container.webkitRequestFullscreen) {
-                    this._container.webkitRequestFullscreen();
+                if (that._container.requestFullscreen) {
+                    that._container.requestFullscreen();
+                } else if (that._container.msRequestFullscreen) {
+                    that._container.msRequestFullscreen();
+                } else if (that._container.mozRequestFullScreen) {
+                    that._container.mozRequestFullScreen();
+                } else if (that._container.webkitRequestFullscreen) {
+                    that._container.webkitRequestFullscreen();
                 }
             }
             function setOrientationControls(e) {
                 if (!e.alpha) {
                     return;
                 }
-                this._controls = new THREE.DeviceOrientationControls(this._camera);
-                this._controls.connect();
-                this._controls.update();
-                this._renderer.domElement.addEventListener('click', fullscreen, false);
+                that._controls = new THREE.DeviceOrientationControls(that._camera);
+                that._controls.connect();
+                that._controls.update();
+                that._renderer.domElement.addEventListener('click', fullscreen, false);
                 window.removeEventListener('deviceorientation', setOrientationControls, true);
             }
             window.addEventListener('deviceorientation', setOrientationControls, true);
@@ -106,11 +118,11 @@ namespace  PandaCardBoard {
         }
 
         public AddGroup(group : THREE.Group):void{
-            this._scene.add(group);
+            this._mainGroup.add(group);
         }
 
         public RemoveGroup(group : THREE.Group){
-            this._scene.remove(group);
+            this._mainGroup.remove(group);
         }
 
         public getRayCaster() : THREE.Raycaster
