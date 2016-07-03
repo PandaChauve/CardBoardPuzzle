@@ -1,6 +1,4 @@
-/**
- * Created by Panda_2 on 23-06-16.
- */
+
 namespace  PandaCardBoard{
     export enum AnimationState{
         Success,
@@ -12,9 +10,9 @@ namespace  PandaCardBoard{
     export abstract class Animator{
         private _duration : number;
         private _startTime = Date.now();
-        protected _element : Element;
+        protected _element : IElement;
 
-        public constructor(elem : Element, duration: number = 1500){
+        public constructor(elem : IElement, duration: number = 1500){
             this._duration = duration;
             this._element = elem;
         }
@@ -42,7 +40,7 @@ namespace  PandaCardBoard{
             return ratio == 1 ? AnimationState.Success : AnimationState.InProgress;
         }
 
-        public destroy() : Element{
+        public destroy() : IElement{
             this._element.reset();
             return this._element;
         }
@@ -52,7 +50,7 @@ namespace  PandaCardBoard{
         private _raycaster : THREE.Raycaster;
         private _range : number;
 
-        public constructor(elem : Element, caster : THREE.Raycaster, duration: number = 1500, range : number = -1)
+        public constructor(elem : IElement, caster : THREE.Raycaster, duration: number = 1500, range : number = -1)
         {
             super(elem, duration);
             this._raycaster = caster;
@@ -79,7 +77,7 @@ namespace  PandaCardBoard{
     export class Deleter extends Animator{
         private _range : number;
 
-        public constructor(mesh : Element, duration: number = 1500, range : number = 100000)
+        public constructor(mesh : IElement, duration: number = 1500, range : number = 100000)
         {
             super(mesh, duration);
             this._range = range;
@@ -98,7 +96,7 @@ namespace  PandaCardBoard{
         private _startPos : THREE.Vector3;
         private _moved : THREE.Object3D;
 
-        public constructor(mesh : Element, moved : THREE.Object3D, duration: number = 1500)
+        public constructor(mesh : IElement, moved : THREE.Object3D, duration: number = 1500)
         {
             super(mesh, duration);
             this._startPos = moved.position.clone();

@@ -12,7 +12,7 @@ namespace  PandaCardBoard {
 
         private currentLocking = <Locker>null;
         private currentMover = <MoveTo>null;
-        private CUBE_SIZE = 100;
+        private CUBE_SIZE = 1;
         private GRAB_FACTOR = 5;
         private state : State;
         private container1 : GraphicalContainer;
@@ -51,7 +51,7 @@ namespace  PandaCardBoard {
             return this.container1.getFrontObject(this.group.children, -1);
         }
 
-        private CreateMover(dest:Element) {
+        private CreateMover(dest:IElement) {
             this.SetStateTo(State.Moving);
             return new MoveTo(dest, this.group);
         }
@@ -77,7 +77,7 @@ namespace  PandaCardBoard {
                             this.currentHover = null;
                             this.currentMover = this.CreateMover(mesh);
                         }
-                    }
+                    }//resource ressources
                 }
             } else if (this.state == State.None) {
                 let sect = this.getFrontObject();

@@ -598,7 +598,7 @@ declare namespace THREE {
      * @see <a href="https://github.com/mrdoob/three.js/blob/master/src/core/BufferAttribute.js">src/core/BufferAttribute.js</a>
      */
     export class BufferAttribute {
-        constructor(array: ArrayLike<number>, itemSize: number); // array parameter should be TypedArray.
+        constructor(array: ArrayLike<number>, itemSize: number, normalized?:boolean); // array parameter should be TypedArray.
 
         uuid: string;
         array: ArrayLike<number>;

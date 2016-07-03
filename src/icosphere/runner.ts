@@ -11,13 +11,12 @@ namespace  PandaCardBoard.Icosphere {
 
             var group = this._group;
             function AddCube(x:number, y:number, z:number) {
-                var cube = new PandaCardBoard.Cube(x*10, y*10, z*10);
+                var cube = new PandaCardBoard.LightCube(x*10, y*10, z*10);
                 group.add(cube.mesh);
             }
             this._container.AddGroup(this._group);
 
             let t = (1.0 + Math.sqrt(5.0)) / 2.0;
-
             for(let idx = 0; idx < 4; ++idx){
                 let first = (idx %2 == 0  ? -1 : 1);
                 let second = (idx < 2  ? t : -t);
@@ -58,7 +57,6 @@ namespace  PandaCardBoard.Icosphere {
 
         destroy():void{
             this._container.RemoveGroup(this._group);
-
         }
     }
 }

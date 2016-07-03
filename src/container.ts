@@ -14,7 +14,8 @@ namespace  PandaCardBoard {
         constructor(id : string){
             this._raycaster = new THREE.Raycaster();
             this._renderer = new THREE.WebGLRenderer({
-                antialias : true
+                antialias : true,
+                clearColor  : 0x000000
             });
 
             this._container = document.getElementById(id);
@@ -34,8 +35,6 @@ namespace  PandaCardBoard {
                 this._camera.position.y,
                 this._camera.position.z
             );
-            this._controls.noZoom = true;
-            this._controls.noPan = true;
         }
 
         public getFrontObject(targets: THREE.Object3D[], distance : number):THREE.Intersection {
@@ -54,7 +53,7 @@ namespace  PandaCardBoard {
         }
 
         public OffsetCamera(){
-            var vec = new THREE.Vector3( 0, 0, -20*100 );
+            var vec = new THREE.Vector3( 0, 0, -20 );
             vec.applyQuaternion( this._camera.quaternion );
             this._mainGroup.position.copy( vec );
             this._mainGroup.lookAt(this._camera.position);
@@ -102,12 +101,10 @@ namespace  PandaCardBoard {
 
         public update(delta: number){
             this.resize();
+            this.updateGroup(this._mainGroup.children);
             this._camera.updateProjectionMatrix();
             this._controls.update(delta);
-            var mouse = new THREE.Vector2();
-            mouse.x = 0;
-            mouse.y = 0; 
-            this._raycaster.setFromCamera(mouse, this._camera);
+            this._raycaster.setFromCamera(new THREE.Vector2(0,0), this._camera);
         }
 
         public render(){
@@ -115,6 +112,15 @@ namespace  PandaCardBoard {
                 this._effect.render(this._scene, this._camera);
             else
                 this._renderer.render(this._scene, this._camera);
+        }
+
+        private updateGroup(group: THREE.Object3D[]){
+            for(let i = 0; i < group.length; ++i){
+                if(group[i].children.length > 0)
+                    this.updateGroup(group[i].children);
+                if(group[i].userData && (<IElement>group[i].userData).update)
+                    (<IElement>group[i].userData).update();
+            }
         }
 
         public AddGroup(group : THREE.Group):void{

@@ -4,7 +4,8 @@ var PandaCardBoard;
         function GraphicalContainer(id) {
             this._raycaster = new THREE.Raycaster();
             this._renderer = new THREE.WebGLRenderer({
-                antialias: true
+                antialias: true,
+                clearColor: 0x000000
             });
             this._container = document.getElementById(id);
             this._container.appendChild(this._renderer.domElement);
@@ -16,8 +17,6 @@ var PandaCardBoard;
             this._scene.add(this._camera);
             this._controls = new THREE.OrbitControls(this._camera, this._renderer.domElement);
             this._controls.target.set(this._camera.position.x + 0.1, this._camera.position.y, this._camera.position.z);
-            this._controls.noZoom = true;
-            this._controls.noPan = true;
         }
         GraphicalContainer.prototype.getFrontObject = function (targets, distance) {
             var intersects = this.getRayCaster().intersectObjects(targets);
@@ -34,7 +33,7 @@ var PandaCardBoard;
             return sect;
         };
         GraphicalContainer.prototype.OffsetCamera = function () {
-            var vec = new THREE.Vector3(0, 0, -20 * 100);
+            var vec = new THREE.Vector3(0, 0, -20);
             vec.applyQuaternion(this._camera.quaternion);
             this._mainGroup.position.copy(vec);
             this._mainGroup.lookAt(this._camera.position);
@@ -81,18 +80,24 @@ var PandaCardBoard;
         };
         GraphicalContainer.prototype.update = function (delta) {
             this.resize();
+            this.updateGroup(this._mainGroup.children);
             this._camera.updateProjectionMatrix();
             this._controls.update(delta);
-            var mouse = new THREE.Vector2();
-            mouse.x = 0;
-            mouse.y = 0;
-            this._raycaster.setFromCamera(mouse, this._camera);
+            this._raycaster.setFromCamera(new THREE.Vector2(0, 0), this._camera);
         };
         GraphicalContainer.prototype.render = function () {
             if (this._effect)
                 this._effect.render(this._scene, this._camera);
             else
                 this._renderer.render(this._scene, this._camera);
+        };
+        GraphicalContainer.prototype.updateGroup = function (group) {
+            for (var i = 0; i < group.length; ++i) {
+                if (group[i].children.length > 0)
+                    this.updateGroup(group[i].children);
+                if (group[i].userData && group[i].userData.update)
+                    group[i].userData.update();
+            }
         };
         GraphicalContainer.prototype.AddGroup = function (group) {
             this._mainGroup.add(group);
