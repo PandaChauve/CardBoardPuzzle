@@ -175,38 +175,47 @@ var PandaCardBoard;
         function LightCube(x, y, z) {
             _super.call(this);
             this._clock = new THREE.Clock(true);
+            this._updateCounter = 0;
             console.log("new cube");
             var material = new THREE.RawShaderMaterial({
                 uniforms: {
                     amplitude: { type: "f", value: 1.0 },
-                    color: { type: "c", value: new THREE.Color(0xffffff) },
                     texture: { type: "t", value: LightCube._txt }
                 },
                 blending: THREE.AdditiveBlending,
                 depthTest: false,
                 transparent: true,
                 vertexShader: "\n\t\t\tprecision mediump float;\n\t\t\tprecision mediump int;\n\t\t\tuniform float amplitude;\n\t\t\tuniform mat4 modelViewMatrix; // optional\n\t\t\tuniform mat4 projectionMatrix; // optional\n\t\t\tattribute float size;\n\t\t\tattribute vec3 customColor;\n\t\t\tvarying vec3 vColor;\n\t\t\tattribute vec3 position;\n\t\t\tvoid main() {\n\t\t\t\tvColor = customColor;\n\t\t\t\tvec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n\t\t\t\tgl_PointSize = size * ( 10.0 / length( mvPosition.xyz ) );\n\t\t\t\tgl_Position = projectionMatrix * mvPosition;\n\t\t\t}\n            ",
-                fragmentShader: "\n\t\t\tprecision mediump float;\n\t\t\tprecision mediump int;\n\t\t\tuniform vec3 color;\n\t\t\tuniform sampler2D texture;\n\t\t\tvarying vec3 vColor;\n\t\t\tvoid main() {\n\t\t\t\tgl_FragColor = vec4( color * vColor, 1.0 );\n\t\t\t\tgl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );\n\t\t\t\t//gl_FragColor =vec4( color*vColor, 1.0 );  // draw red\n\t\t\t}"
+                fragmentShader: "\n\t\t\tprecision mediump float;\n\t\t\tprecision mediump int;\n\t\t\tuniform sampler2D texture;\n\t\t\tvarying vec3 vColor;\n\t\t\tvoid main() {\n\t\t\t\tgl_FragColor = vec4( vColor, 1.0 );\n\t\t\t\tgl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );\n\t\t\t}"
             });
-            var points = 300;
+            var points = 50;
             var geometry = new THREE.BufferGeometry();
             var vertices = new Float32Array(points * 3);
-            for (var i = 0, l = points * 3; i < l; i += 3) {
-                vertices[i] = (Math.random() - 0.5) * 3;
-                vertices[i + 1] = (Math.random() - 0.5) * 3;
-                vertices[i + 2] = (Math.random() - 0.5) * 3;
+            function setVertice(x, y, z, num) {
+                var i = num * 3;
+                if (x * x + y * y + z * z > 1)
+                    return false;
+                vertices[i] = x;
+                vertices[i + 1] = y;
+                vertices[i + 2] = z;
+                return true;
+            }
+            for (var idx = 0; idx < points; idx++) {
+                while (!setVertice(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1, idx))
+                    ;
             }
             geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
             var colors = new Uint8Array(points * 3);
             for (var i = 0, l = points * 3; i < l; i += 3) {
-                colors[i] = Math.random() * 255;
-                colors[i + 1] = Math.random() * 255;
-                colors[i + 2] = Math.random() * 255;
+                colors[i] = 255;
+                colors[i + 1] = 255;
+                colors[i + 2] = 255;
             }
-            geometry.addAttribute('customColor', new THREE.BufferAttribute(colors, 3, true));
+            this._colorsCopy = colors.slice(0);
+            geometry.addAttribute('customColor', new THREE.BufferAttribute(this._colorsCopy, 3, true));
             var size = new Uint8Array(points);
             for (var i = 0, l = points; i < l; i += 1) {
-                size[i] = 17;
+                size[i] = 55;
             }
             geometry.addAttribute('size', new THREE.BufferAttribute(size, 1, false));
             this.mesh = new THREE.Points(geometry, material);
@@ -215,15 +224,33 @@ var PandaCardBoard;
             this.mesh.userData = this;
         }
         ;
-        LightCube.prototype.update = function () {
-            var t = this._clock.getElapsedTime();
-            var att = this.mesh.geometry.getAttribute('size');
-            var time = t;
+        LightCube.prototype.lock = function (ratio) {
+            var att = this.mesh.geometry.getAttribute('customColor');
             for (var i = 0; i < att.array.length; i += 1) {
-                att.setX(i, 55 + 55 * Math.sin(0.1 * i + time));
+                var current = this._colorsCopy[i * 3];
+                att.setX(i, current + (255 - current) * ratio);
+                current = this._colorsCopy[i * 3 + 1];
+                att.setY(i, current - (current) * ratio);
+                current = this._colorsCopy[i * 3 + 2];
+                att.setZ(i, current - (current) * ratio);
             }
             att.version++;
         };
+        ;
+        LightCube.prototype.reset = function () {
+            this.mesh.geometry.addAttribute('customColor', new THREE.BufferAttribute(this._colorsCopy.slice(0), 3, true));
+        };
+        ;
+        LightCube.prototype.update = function () {
+            this._updateCounter++;
+            var att = this.mesh.geometry.getAttribute('size');
+            for (var i = 0; i < att.array.length; i += 1) {
+                if ((this._updateCounter + i) % 20 == 0)
+                    att.setX(i, 100 * Math.random());
+            }
+            att.version++;
+        };
+        ;
         LightCube._txt = THREE.ImageUtils.loadTexture("../resources/spark.png");
         return LightCube;
     }(Element));

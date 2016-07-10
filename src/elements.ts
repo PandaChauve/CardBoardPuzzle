@@ -226,6 +226,7 @@ namespace  PandaCardBoard{
 
     export class LightCube extends Element implements IElement {
         private _clock = new THREE.Clock(true);
+        private _colorsCopy : Uint8Array;
         private static  _txt = THREE.ImageUtils.loadTexture("../resources/spark.png");
         constructor(x:number,y:number,z:number) {
             super();
@@ -235,7 +236,6 @@ namespace  PandaCardBoard{
 
                 uniforms: {
                     amplitude: {type: "f", value: 1.0},
-                    color: {type: "c", value: new THREE.Color(0xffffff)},
                     texture: {type: "t", value: LightCube._txt}
                 },
                 blending: THREE.AdditiveBlending,
@@ -261,56 +261,81 @@ namespace  PandaCardBoard{
                 fragmentShader: `
 			precision mediump float;
 			precision mediump int;
-			uniform vec3 color;
 			uniform sampler2D texture;
 			varying vec3 vColor;
 			void main() {
-				gl_FragColor = vec4( color * vColor, 1.0 );
+				gl_FragColor = vec4( vColor, 1.0 );
 				gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
-				//gl_FragColor =vec4( color*vColor, 1.0 );  // draw red
 			}`
             });
 
-            var points = 300;
+            var points = 50;
+
 
             var geometry = new THREE.BufferGeometry();
             var vertices = new Float32Array( points*3 );
-            for ( var i = 0, l = points* 3; i < l; i += 3 ) {
-                vertices[ i     ] = (Math.random() - 0.5)*3;
-                vertices[ i + 1 ] = (Math.random() - 0.5)*3;
-                vertices[ i + 2 ] = (Math.random() - 0.5)*3;
+            function setVertice(x,y,z, num): boolean{
+                let i= num*3;
+                if(x*x+y*y+z*z > 1)
+                    return false;
+                vertices[ i     ] = x;
+                vertices[ i + 1 ] = y;
+                vertices[ i + 2 ] = z;
+                return true;
             }
+            for(let idx  = 0; idx < points; idx++){
+                while(!setVertice(Math.random()*2-1,Math.random()*2-1,Math.random()*2-1,idx));
+
+            }
+
             geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
             var colors = new Uint8Array( points * 3);
             for ( var i = 0, l = points * 3; i < l; i += 3 ) {
-                colors[ i     ] = Math.random() * 255;
-                colors[ i + 1 ] = Math.random() * 255;
-                colors[ i + 2 ] = Math.random() * 255;
+                colors[ i     ] = 255;//Math.random() * 255;
+                colors[ i + 1 ] = 255;//Math.random() * 255;
+                colors[ i + 2 ] = 255;//Math.random() * 255;
             }
-            geometry.addAttribute( 'customColor', new THREE.BufferAttribute( colors, 3, true) );
-
+            this._colorsCopy = colors.slice(0);
+            geometry.addAttribute( 'customColor', new THREE.BufferAttribute( this._colorsCopy, 3, true));
             var size = new Uint8Array( points);
             for ( var i = 0, l = points ; i < l; i += 1 ) {
-                size[ i     ] = 17;
+                size[ i     ] = 55;
             }
             geometry.addAttribute( 'size', new THREE.BufferAttribute( size, 1, false) );
 
             this.mesh = new THREE.Points( geometry, material );
             this.mesh.scale.set(1,1,1);
-            //this.mesh.matrixAutoUpdate = false;
             this.setPosition(x,y,z);
             this.mesh.userData = this;
         };
 
-        update () {
-            let t = this._clock.getElapsedTime();
-            var att = <THREE.BufferAttribute>(<THREE.BufferGeometry>this.mesh.geometry).getAttribute('size');
-            var time = t;
+        public lock(ratio : number):void{
+            var att = <THREE.BufferAttribute>(<THREE.BufferGeometry>this.mesh.geometry).getAttribute('customColor');
             for ( var i = 0; i < att.array.length; i += 1 ) {
-                att.setX(i, 55 + 55 * Math.sin(0.1 * i + time));
+                let current = this._colorsCopy[i*3];
+                att.setX(i, current + (255 - current)*ratio);
+                current = this._colorsCopy[i*3+1];
+                att.setY(i, current - ( current)*ratio);
+                current = this._colorsCopy[i*3+2];
+                att.setZ(i, current - ( current)*ratio);
             }
             att.version++;
-        }
+        };
+
+        public reset():void{
+            (<THREE.BufferGeometry>this.mesh.geometry).addAttribute( 'customColor', new THREE.BufferAttribute( this._colorsCopy.slice(0), 3, true));
+        };
+
+        private _updateCounter = 0;
+        public update () {
+            this._updateCounter++;
+            var att = <THREE.BufferAttribute>(<THREE.BufferGeometry>this.mesh.geometry).getAttribute('size');
+            for ( var i = 0; i < att.array.length; i += 1 ) {
+                if((this._updateCounter + i )% 20 == 0)
+                    att.setX(i,  100 * Math.random());
+            }
+            att.version++;
+        };
 
     }
 
