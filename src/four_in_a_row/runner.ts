@@ -6,7 +6,7 @@ namespace  PandaCardBoard.FourInARow {
     }
     export class Runner implements IRunnable{
         private _grid = new Grid();
-        private _ia = new BasicIA(this._grid, Token.Blue);
+        private _ia = new MediumIA(this._grid, Token.Blue);
         private _drawer: Drawer;
         private _state = State.IA;
         private _container : GraphicalContainer;

@@ -17,6 +17,16 @@ namespace  PandaCardBoard.FourInARow{
                 }
             }
         }
+        public clone(): Grid
+        {
+            let ret = new Grid();
+            for(let idx = 0; idx < this._size; idx++ ){
+                for(let idx2 = 0; idx2 < this._size; idx2++){
+                    ret._data[idx][idx2] = this._data[idx][idx2];
+                }
+            }
+            return ret;
+        }
 
         public subscribe(callback: (event: Utils.IEvent) => void) : number{
             return this._eventhandler.subscribe(callback);
@@ -61,7 +71,26 @@ namespace  PandaCardBoard.FourInARow{
                     y : idx,
                     color : token
                 }
-            })
+            });
+        }
+        public removeFromColumn(position : number) : void{
+            let idx = this._data[position].length -1;
+            while(idx >= 0 && this._data[position][idx] == Token.None)
+                idx--;
+            if(idx < 0)
+                return;
+
+            this._eventhandler.notify({
+                name: 'deleteToken',
+                sender : this,
+                content : {
+                    x : position,
+                    y : idx,
+                    color : this._data[position][idx]
+                }
+            });
+            this._data[position][idx] = Token.None;
+
         }
 
         public isWon() : boolean{
